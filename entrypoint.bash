@@ -10,6 +10,7 @@ input=''
 output=''
 targetWidth=3840
 targetHeight=2160
+resolution=''
 onePassScale=4
 model=$(printf ${modelfmt} ${onePassScale})
 
@@ -21,6 +22,7 @@ Usage:
         -b|--binary     the binary of the upscaler
         -i|--input      the folder of input images
         -o|--output     the folder to store the output images
+        -r|--resolution target enlargement resolution, for example: 3840x2160
 
 " >&2
     exit 1
@@ -29,8 +31,8 @@ Usage:
 getInput() {
     ## Parse input
     GETOPT=$(getopt \
-        -o b:i:o: \
-        --long binary:,input:,output: \
+        -o b:i:o:r: \
+        --long binary:,input:,output:,resolution: \
         -- "$@")
 
     eval set -- "${GETOPT}"
@@ -49,6 +51,10 @@ getInput() {
             output=$2
             shift 2
             ;;
+        -r | --resolution)
+            resolution=$2
+            shift 2
+            ;;
         --)
             shift
             break
@@ -62,9 +68,26 @@ getInput() {
     done
 }
 
-# getInputFilesList() {
-    
-# }
+parseInput() {
+    if [ -z "${resolution}" ]; then
+        return
+    fi
+    IFS='x' read -ra wh <<< "${resolution}"
+    local len="${#wh[@]}"
+    if [ ${len} -lt 2 ]; then
+        echo "${resolution} is an invalid resolution"
+        exit 1 
+    fi
+    local width=${wh[0]}
+    local height=${wh[1]}
+    re='^[0-9]+$'
+    if ! [[ ${width} =~ ${re} ]] || ! [[ ${height} =~ ${re} ]]; then
+        echo "${resolution} is an invalid resolution"
+        exit 1
+    fi
+    targetWidth=${width}
+    targetHeight=${height}
+}
 
 getImgs() {
     imgs_in=($(ls -d ${input%/}/*))
@@ -199,7 +222,7 @@ runConvert() {
     local fullfilename=$(basename ${img})
     local filename=${fullfilename%.*}
     local suffix="${fullfilename##*.}"
-    convert -resize "${scale}%" "${img}" "${output%/}/${filename}_4k.${suffix}"
+    convert -resize "${scale}%" "${img}" "${output%/}/${filename}_targeting_${targetWidth}x${targetHeight}.${suffix}"
     rm ${img}
 }
 
@@ -209,4 +232,5 @@ main() {
 }
 
 getInput "$@"
+parseInput
 main
