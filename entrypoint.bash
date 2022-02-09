@@ -137,12 +137,18 @@ upscale() {
     done
 }
 
+divideAndRoundUp() {
+    local x=$1
+    local y=$2
+    echo $(python3 -c "import math; x=${x}; y=${y}; z=x/y; print(int(math.ceil(z)))")
+}
+
 calculateNumOfPass() {
     local width=$1
     local height=$2
     #plus 0.5 at the end for always rounding up
-    local scaleW=$(awk "BEGIN {x=${targetWidth}; y=${width}; z=x/y; printf \"%3.0f\", z+0.5}")
-    local scaleH=$(awk "BEGIN {x=${targetHeight}; y=${height}; z=x/y; printf \"%3.0f\", z+0.5}")
+    local scaleW=$(divideAndRoundUp ${targetWidth} ${width})
+    local scaleH=$(divideAndRoundUp ${targetHeight} ${height})
     # debug
     # echo "scaleW: ${scaleW}, scaleH: ${scaleH}"
     local scale
@@ -157,7 +163,7 @@ calculateNumOfPass() {
     fi
     # debug
     # echo "scale: ${scale}"
-    local pass=$(awk "BEGIN {x=${scale}; y=${onePassScale}; z=x/y; printf \"%3.0f\", z+0.5}")
+    local pass=$(divideAndRoundUp ${scale} ${onePassScale})
     # debug
     # echo "pass: ${pass}"
     echo ${pass}
