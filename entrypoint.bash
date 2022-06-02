@@ -186,7 +186,7 @@ runRealesrgan() {
         local signature=$(printf ${modelfmt} ${scalefactor})
         local outputfilename="${output%/}/${filename}_${signature}.png"
         imgOrig=${img}
-        execRealesrgan=$("${binary}" -i "${img}" -o "${outputfilename}" -n "${model}")
+        stdOutErr=$("${binary}" -i "${img}" -o "${outputfilename}" -n "${model}")
         img=${outputfilename}
         if [ ${i} -gt 1 ]; then
             #not to remove image from the input directory
